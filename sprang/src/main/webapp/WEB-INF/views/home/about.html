@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+    <script>
+		fillData.call();
+		function fillData(){
+			var app = angular.module('emp', []);
+			app.controller('empctrl', function($scope, $http){ 
+				window.console.log("controller:");
+				
+				$scope.FirstName = '';
+				$scope.LastName = '';
+				$scope.EmployeeID = undefined;
+			$scope.fillList = function(){
+				window.console.log('fillList:');
+				$scope.empList = [];
+			$http.get('http://localhost:50400/sprang-1.0/emplist', {headers : {'Content-Type' : 'application/json; charset=UTF-8'}}).then(function(response){
+			var empList = response.data;
+			$scope.empList = empList;
+				window.console.log('emplist: response:' + $scope.empList.toString());
+			});
+		};
+		
+		$scope.fillList();
+				
+			$scope.createEmployee = function(id){
+				window.console.log('createEmp:' + id);
+				var firstName = $scope.FirstName;
+				var lastName = $scope.LastName;
+				window.console.log('create emp:' + firstName + ' ' + lastName + ' ' + id);
+				if (id == undefined)
+					var params = {'firstName':firstName, 'lastName':lastName};
+				else
+					var params = {'firstName':firstName, 'lastName':lastName, 'employeeID': id};
+				$http.post('http://localhost:50400/sprang-1.0/createEmp', params).then(function(response){
+					window.console.log('createEmp:' + response.data);
+					$scope.fillList();
+				}, function(resp){
+					window.console.log("create err:" + resp);
+				});
+				
+			$scope.changeEmployee = function(){
+				var firstName = $scope.FirstName;
+				var lastName = $scope.LastName;
+				
+			}
+			}
+			
+			$scope.edit = function(id){
+				window.console.log('edit:' + id);
+				var param = {'EmployeeID': id};
+				var url = 'http://localhost:50400/sprang-1.0/getemp?EmployeeID=' + id;
+				$http.get(url).then(function(resp){
+					
+					window.console.log("edit response:" + JSON.stringify(resp.data));
+					var emp = resp.data;
+					$scope.FirstName = emp.FirstName;
+					$scope.LastName = emp.LastName;
+					$scope.EmployeeID = emp.EmployeeID;
+				}, function(resp){
+					window.console.log("edit error:" + resp);
+				})
+			}
+			
+			$scope.delete = function(id){
+				var params = {'EmploeeID':id};
+				var url = 'http://localhost:50400/sprang-1.0/deleteEmp?EmployeeID=' + id;
+				$http.delete(url).then(function(resp){
+					window.console.log('delete:resp:' + resp.data);
+					$scope.fillList();
+				}, function(resp){
+					window.console.log('delete: err:' + resp)
+				})
+				
+			}
+			
+		});
+	}
+//		empcontroller.$inject = ['$scope', '$http']
+	
+		
+	</script>
+</head>
+<body>
+	<div ng-app="emp" ng-controller="empctrl">
+		<div class="editarea">
+		<form>
+			First Name:<input type="text" ng-model="FirstName"/><br>
+			Last Name:<input type="text" ng-model="LastName"/><br>
+			<button ng-click="createEmployee(undefined);">Create</button>
+			<button ng-click="createEmployee(EmployeeID);">Change</button>
+	
+		</form>
+		</div>
+		<table border="2">
+			<tr><td>Имя</td><td>Фамилия</td></tr>
+			<tr ng-repeat="e in empList">
+				<td>{{e.FirstName}}</td>
+				<td>{{e.LastName}}</td>
+				<td><a href="#" ng-click="edit(e.EmployeeID);">Edit</a></td>
+				<td><a href="#" ng-click="delete(e.EmployeeID);">Delete</a></td>
+			</tr>
+		</table>	
+ 
+<!--		
+<p>Input something in the input box:</p>
+<p>Name: <input type="text" ng-model="name"></p>
+<p ng-bind="name"></p>
+-->
+</div>
+</body>
+</html>
